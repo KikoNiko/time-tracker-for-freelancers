@@ -75,7 +75,7 @@ export default function TimeTracker() {
 
         {isCheckedIn && (
           <p className="text-xl font-mono text-green-600 mt-4">
-            Current Time: {formatTime(currentTime)}
+            Current Time: {currentTime.toLocaleTimeString()}
           </p>
         )}
 
