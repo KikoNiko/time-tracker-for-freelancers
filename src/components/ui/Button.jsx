@@ -1,6 +1,6 @@
 import React from "react";
 
-export function Button({ children, onClick, disabled, variant = "primary" }) {
+export function Button({ children, onClick, disabled, variant = "", className = "" }) {
   const baseStyles =
     "px-4 py-2 text-sm font-semibold rounded-2xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
   
@@ -11,7 +11,11 @@ export function Button({ children, onClick, disabled, variant = "primary" }) {
   };
 
   return (
-    <button onClick={onClick} disabled={disabled} className={`${baseStyles} ${variants[variant]}`}>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseStyles} ${variants[variant] || ""} ${className}`}
+    >
       {children}
     </button>
   );
