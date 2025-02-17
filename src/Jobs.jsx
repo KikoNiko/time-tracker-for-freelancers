@@ -16,13 +16,22 @@ export default function Jobs() {
   useEffect(() => {
     const savedButtons = localStorage.getItem("jobButtons");
     if (savedButtons) {
-      setButtons(JSON.parse(savedButtons));
+      try {
+        setButtons(JSON.parse(savedButtons));
+      } catch (error) {
+        console.error("Error parsing stored job buttons:", error);
+        setButtons([]);
+      }
     }
   }, []);
+  
 
   useEffect(() => {
-    localStorage.setItem("jobButtons", JSON.stringify(buttons));
+    if (buttons.length > 0) {
+      localStorage.setItem("jobButtons", JSON.stringify(buttons));
+    }
   }, [buttons]);
+  
 
   const handleAddButton = () => {
     if (!newButtonLabel.trim()) return;

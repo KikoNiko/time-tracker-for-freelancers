@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import * as XLSX from "xlsx";
 
 export default function TimeTracker() {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -18,13 +17,8 @@ export default function TimeTracker() {
     return () => clearInterval(interval);
   }, [isCheckedIn]);
 
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-GB").replace(/\//g, "."); // Converts to DD.MM.YYYY
-  };
-
-  const formatTime = (date) => {
-    return date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); // Converts to HH:MM
-  };
+  const formatDate = (date) => date.toLocaleDateString("en-GB").replace(/\//g, "."); // DD.MM.YYYY
+  const formatTime = (date) => date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); // HH:MM
 
   const handleCheckIn = () => {
     setIsCheckedIn(true);
@@ -60,11 +54,28 @@ export default function TimeTracker() {
     }
   };
 
-  const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(workedHours);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Work Hours");
-    XLSX.writeFile(wb, "work_hours.xlsx");
+  const handleExport = async () => {
+    if (workedHours.length === 0) {
+      alert("No data to export!");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/add-job-entry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(workedHours),
+      });
+
+      if (response.ok) {
+        alert("Data exported successfully to Google Sheets!");
+      } else {
+        alert("Failed to export data.");
+      }
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      alert("An error occurred while exporting.");
+    }
   };
 
   return (
@@ -88,7 +99,7 @@ export default function TimeTracker() {
           </div>
         )}
 
-        {/* Button Group - Horizontally aligned */}
+        {/* Button Group */}
         <div className="flex justify-center gap-4 mt-6">
           <Button onClick={handleCheckIn} disabled={isCheckedIn} variant="success">
             Check In
@@ -96,7 +107,7 @@ export default function TimeTracker() {
           <Button onClick={handleCheckOut} disabled={!isCheckedIn} variant="danger">
             Check Out
           </Button>
-          <Button onClick={exportToExcel} disabled={workedHours.length === 0} variant="primary">
+          <Button onClick={handleExport} disabled={workedHours.length === 0} variant="primary">
             Export
           </Button>
         </div>
