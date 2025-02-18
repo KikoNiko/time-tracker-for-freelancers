@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function TimeTracker() {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -8,6 +9,18 @@ export default function TimeTracker() {
   const [task, setTask] = useState("");
   const [error, setError] = useState(""); // Error state for task input
   const [currentTime, setCurrentTime] = useState(new Date());
+  const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const jobName = queryParams.get("job"); // Extract job name
+  const [isExported, setIsExported] = useState(false); // Track export status
+
+  // Redirect user if no job name is found
+  useEffect(() => {
+    if (!jobName) {
+      navigate("/"); // Redirect to Jobs page
+    }
+  }, [jobName, navigate]);
 
   useEffect(() => {
     let interval;
@@ -60,15 +73,21 @@ export default function TimeTracker() {
       return;
     }
 
+    if (isExported) {
+      alert("Data has already been exported!");
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:5000/add-job-entry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(workedHours),
+        body: JSON.stringify({ jobName, data: workedHours }), // Send job name
       });
 
       if (response.ok) {
-        alert("Data exported successfully to Google Sheets!");
+        alert(`Data exported successfully to Google Sheet: ${jobName}`);
+        setIsExported(true);
       } else {
         alert("Failed to export data.");
       }
@@ -81,7 +100,7 @@ export default function TimeTracker() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 text-center p-6">
       <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h1 className="text-3xl font-extrabold text-blue-600 mb-4">Time Tracker</h1>
+        <h1 className="text-3xl font-extrabold text-blue-600 mb-4">Time Tracker for: {jobName}</h1>
         <p className="text-gray-600 text-sm">{formatDate(new Date())}</p>
 
         {isCheckedIn && (
@@ -107,7 +126,7 @@ export default function TimeTracker() {
           <Button onClick={handleCheckOut} disabled={!isCheckedIn} variant="danger">
             Check Out
           </Button>
-          <Button onClick={handleExport} disabled={workedHours.length === 0} variant="primary">
+          <Button onClick={handleExport} disabled={workedHours.length === 0 || isExported} variant="primary">
             Export
           </Button>
         </div>

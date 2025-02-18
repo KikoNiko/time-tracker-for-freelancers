@@ -76,14 +76,13 @@ export default function Jobs() {
               className="relative w-40 h-40"
             >
               <button
-                onClick={() => navigate("/tracker")}
+                onClick={() => navigate(`/tracker?job=${encodeURIComponent(btn.label)}`)}
                 className="w-full h-full text-white text-lg font-semibold rounded-2xl shadow-lg transform transition-all hover:scale-105"
                 style={{ backgroundColor: btn.color }}
-                onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
-                onMouseLeave={(e) => (e.currentTarget.style.filter = "brightness(1)")}
               >
                 {btn.label}
               </button>
+
 
               {/* Delete Button (Trash Icon) */}
               <button
