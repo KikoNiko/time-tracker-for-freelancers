@@ -14,38 +14,31 @@ export default function Jobs() {
   const [buttonToDelete, setButtonToDelete] = useState(null);
 
   useEffect(() => {
-    const savedButtons = localStorage.getItem("jobButtons");
-    if (savedButtons) {
-      try {
-        setButtons(JSON.parse(savedButtons));
-      } catch (error) {
-        console.error("Error parsing stored job buttons:", error);
-        setButtons([]);
-      }
-    }
-  }, []);
-  
-
-  useEffect(() => {
-    if (buttons.length > 0) {
-      localStorage.setItem("jobButtons", JSON.stringify(buttons));
-    }
-  }, [buttons]);
-  
+    fetch("http://localhost:5000/jobs")
+      .then((res) => res.json())
+      .then((data) => setButtons(data))
+      .catch((err) => console.error("Error fetching jobs:", err));
+  }, []);  
 
   const handleAddButton = () => {
     if (!newButtonLabel.trim()) return;
-    const newButton = {
-      id: Date.now(),
-      label: newButtonLabel,
-      color: newButtonColor,
-    };
-
-    setButtons([...buttons, newButton]);
-    setShowModal(false);
-    setNewButtonLabel("");
+  
+    const newJob = { name: newButtonLabel, color: newButtonColor };
+  
+    fetch("http://localhost:5000/jobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newJob),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setButtons([...buttons, data]);
+        setShowModal(false);
+        setNewButtonLabel("");
+      })
+      .catch((err) => console.error("Error adding job:", err));
   };
-
+  
   const confirmDeleteButton = (id) => {
     setButtonToDelete(id);
     setShowDeleteModal(true);
@@ -53,11 +46,18 @@ export default function Jobs() {
 
   const handleDeleteButton = () => {
     if (buttonToDelete !== null) {
-      setButtons(buttons.filter((btn) => btn.id !== buttonToDelete));
-      setShowDeleteModal(false);
-      setButtonToDelete(null);
+      fetch(`http://localhost:5000/jobs/${buttonToDelete}`, {
+        method: "DELETE",
+      })
+        .then(() => {
+          setButtons(buttons.filter((btn) => btn.id !== buttonToDelete));
+          setShowDeleteModal(false);
+          setButtonToDelete(null);
+        })
+        .catch((err) => console.error("Error deleting job:", err));
     }
   };
+  
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
@@ -76,11 +76,11 @@ export default function Jobs() {
               className="relative w-40 h-40"
             >
               <button
-                onClick={() => navigate(`/tracker?job=${encodeURIComponent(btn.label)}`)}
+                onClick={() => navigate(`/tracker?job=${encodeURIComponent(btn.name)}`)}
                 className="w-full h-full text-white text-lg font-semibold rounded-2xl shadow-lg transform transition-all hover:scale-105"
                 style={{ backgroundColor: btn.color }}
               >
-                {btn.label}
+                {btn.name}
               </button>
 
 
@@ -115,7 +115,7 @@ export default function Jobs() {
             className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
           >
             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-              <h2 className="text-xl font-bold mb-4">Add New Job Button</h2>
+              <h2 className="text-xl font-bold mb-4">Add New Job</h2>
               <input
                 type="text"
                 placeholder="Enter button name"
