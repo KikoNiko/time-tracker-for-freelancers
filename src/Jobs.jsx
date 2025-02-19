@@ -12,16 +12,30 @@ export default function Jobs() {
   const [newButtonColor, setNewButtonColor] = useState("#6b7280");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [buttonToDelete, setButtonToDelete] = useState(null);
+  const [jobLimitReached, setJobLimitReached] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:5000/jobs")
       .then((res) => res.json())
-      .then((data) => setButtons(data))
+      .then((data) => {
+        setButtons(data);
+        setJobLimitReached(data.length >= 10);
+      })
       .catch((err) => console.error("Error fetching jobs:", err));
-  }, []);  
+  }, []);
 
-  const handleAddButton = () => {
+  
+  const handleAddButton = async () => {
     if (!newButtonLabel.trim()) return;
+    
+    const jobExists = buttons.some(
+      (job) => job.name.toLowerCase() === newButtonLabel.toLowerCase()
+    );
+  
+    if (jobExists) {
+      alert("A job with this name already exists!");
+      return;
+    }
   
     const newJob = { name: newButtonLabel, color: newButtonColor };
   
@@ -32,12 +46,18 @@ export default function Jobs() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setButtons([...buttons, data]);
-        setShowModal(false);
-        setNewButtonLabel("");
+        if (data.error) {
+          alert(data.error);
+        } else {
+          setButtons([...buttons, data]);
+          setJobLimitReached(buttons.length + 1 >= 10); // Update limit state
+          setShowModal(false);
+          setNewButtonLabel("");
+        }
       })
       .catch((err) => console.error("Error adding job:", err));
   };
+  
   
   const confirmDeleteButton = (id) => {
     setButtonToDelete(id);
@@ -104,6 +124,11 @@ export default function Jobs() {
       >
         <span className="text-6xl">+</span>
       </motion.button>
+      {jobLimitReached && (
+        <p className="text-red-500 text-lg font-semibold mt-2">
+          You have reached the job limit (10 jobs max).
+        </p>
+      )}
 
       {/* Add Button Modal */}
       <AnimatePresence>
