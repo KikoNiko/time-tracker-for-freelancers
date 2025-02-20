@@ -14,6 +14,11 @@ export default function Jobs() {
   const [buttonToDelete, setButtonToDelete] = useState(null);
   const [jobLimitReached, setJobLimitReached] = useState(false);
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   useEffect(() => {
     fetch("http://localhost:5000/jobs")
       .then((res) => res.json())
@@ -50,7 +55,7 @@ export default function Jobs() {
           alert(data.error);
         } else {
           setButtons([...buttons, data]);
-          setJobLimitReached(buttons.length + 1 >= 10); // Update limit state
+          setJobLimitReached(buttons.length + 1 >= 10);
           setShowModal(false);
           setNewButtonLabel("");
         }
@@ -81,6 +86,9 @@ export default function Jobs() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
+      <button onClick={handleLogout} className="bg-red-500 text-white p-2 rounded">
+        Logout
+      </button>
       <h1 className="text-4xl font-extrabold text-blue-600 mb-8">Jobs</h1>
 
       {/* Buttons Grid */}
@@ -156,7 +164,8 @@ export default function Jobs() {
                   { name: "Green", color: "#22c55e" },
                   { name: "Purple", color: "#a855f7" },
                   { name: "Red", color: "#ef4444" },
-                  { name: "Yellow", color: "#eab308" },
+                  { name: "Yellow", color: "#fede00" },
+                  { name: "Orange", color: "#ffa500" },
                 ].map(({ name, color }) => (
                   <div
                     key={name}
