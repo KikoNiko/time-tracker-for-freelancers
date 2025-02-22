@@ -14,11 +14,6 @@ export default function Jobs() {
   const [buttonToDelete, setButtonToDelete] = useState(null);
   const [jobLimitReached, setJobLimitReached] = useState(false);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
   useEffect(() => {
     fetch("http://localhost:5000/jobs")
       .then((res) => res.json())
@@ -86,9 +81,6 @@ export default function Jobs() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-6">
-      <button onClick={handleLogout} className="bg-red-500 text-white p-2 rounded">
-        Logout
-      </button>
       <h1 className="text-4xl font-extrabold text-blue-600 mb-8">Jobs</h1>
 
       {/* Buttons Grid */}
