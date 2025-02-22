@@ -5,7 +5,7 @@ import TimeTracker from "./TimeTracker";
 
 export default function App() {
   return (
-    <div style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ fontFamily: "'Montserrat', sans-serif" }}>
       <Router>
       <Routes>
         <Route path="/" element={<Jobs />} />
