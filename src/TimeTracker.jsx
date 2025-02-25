@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function TimeTracker() {
