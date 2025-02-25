@@ -5,6 +5,7 @@ import { Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Jobs() {
+  const apiUrl = 'https://time-tracker-backend-0tr7.onrender.com';
   const navigate = useNavigate();
   const [buttons, setButtons] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -15,7 +16,7 @@ export default function Jobs() {
   const [jobLimitReached, setJobLimitReached] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:5000/jobs")
+    fetch(`${apiUrl}/jobs`)
       .then((res) => res.json())
       .then((data) => {
         setButtons(data);
@@ -39,7 +40,7 @@ export default function Jobs() {
   
     const newJob = { name: newButtonLabel, color: newButtonColor };
   
-    fetch("http://localhost:5000/jobs", {
+    fetch(`${apiUrl}/jobs`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newJob),
@@ -66,7 +67,7 @@ export default function Jobs() {
 
   const handleDeleteButton = () => {
     if (buttonToDelete !== null) {
-      fetch(`http://localhost:5000/jobs/${buttonToDelete}`, {
+      fetch(`${apiUrl}/jobs/${buttonToDelete}`, {
         method: "DELETE",
       })
         .then(() => {

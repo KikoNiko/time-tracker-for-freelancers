@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function TimeTracker() {
+  const apiUrl = 'https://time-tracker-backend-0tr7.onrender.com';
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState(null);
   const [workedHours, setWorkedHours] = useState([]);
@@ -79,7 +80,7 @@ export default function TimeTracker() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/add-job-entry", {
+      const response = await fetch(`${apiUrl}/add-job-entry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ jobName, data: workedHours }), // Send job name
