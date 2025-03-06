@@ -3,24 +3,26 @@ import { Button } from "@/components/ui/Button";
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function TimeTracker() {
-  const apiUrl = 'https://time-tracker-backend-0tr7.onrender.com';
+  const apiUrl = "https://time-tracker-backend-0tr7.onrender.com";
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState(null);
   const [workedHours, setWorkedHours] = useState([]);
   const [task, setTask] = useState("");
-  const [error, setError] = useState(""); // Error state for task input
+  const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [isPaused, setIsPaused] = useState(false);
+  const [pauseStartTime, setPauseStartTime] = useState(null);
+  const [breaks, setBreaks] = useState([]);
+  const [totalBreakMinutes, setTotalBreakMinutes] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const jobName = queryParams.get("job"); // Extract job name
-  const [isExported, setIsExported] = useState(false); // Track export status
+  const jobName = queryParams.get("job");
+  const [isExported, setIsExported] = useState(false);
+  const [breakTimer, setBreakTimer] = useState(0);
 
-  // Redirect user if no job name is found
   useEffect(() => {
-    if (!jobName) {
-      navigate("/"); // Redirect to Jobs page
-    }
+    if (!jobName) navigate("/");
   }, [jobName, navigate]);
 
   useEffect(() => {
@@ -31,13 +33,44 @@ export default function TimeTracker() {
     return () => clearInterval(interval);
   }, [isCheckedIn]);
 
-  const formatDate = (date) => date.toLocaleDateString("en-GB").replace(/\//g, "."); // DD.MM.YYYY
-  const formatTime = (date) => date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); // HH:MM
+  useEffect(() => {
+    let breakInterval;
+    if (isPaused) {
+      breakInterval = setInterval(() => {
+        setBreakTimer((prev) => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(breakInterval);
+  }, [isPaused]);
+
+  const formatDate = (date) => date.toLocaleDateString("en-GB").replace(/\//g, ".");
+  const formatTime = (date) => date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+
+  const formatBreakTimer = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins} min ${secs} sec`;
+  };
 
   const handleCheckIn = () => {
     setIsCheckedIn(true);
     setCheckInTime(new Date());
-    setError(""); // Clear any previous error when checking in
+    setBreaks([]);
+    setTotalBreakMinutes(0);
+    setError("");
+  };
+
+  const handlePauseResume = () => {
+    if (!isPaused) {
+      setPauseStartTime(new Date());
+      setBreakTimer(0);
+    } else {
+      const roundedMinutes = Math.round(breakTimer / 60);
+      setBreaks([...breaks, roundedMinutes]);
+      setTotalBreakMinutes(totalBreakMinutes + roundedMinutes);
+      setBreakTimer(0);
+    }
+    setIsPaused(!isPaused);
   };
 
   const handleCheckOut = () => {
@@ -45,28 +78,39 @@ export default function TimeTracker() {
       setError("Please enter a task before checking out.");
       return;
     }
-
+  
     if (checkInTime) {
       const checkOutTime = new Date();
       checkOutTime.setSeconds(0, 0);
       checkInTime.setSeconds(0, 0);
+      
       const hoursWorked = (checkOutTime - checkInTime) / (1000 * 60 * 60);
-
+      const netWorkedHours = hoursWorked - totalBreakMinutes / 60;
+  
+      // Convert to minutes and round
+      const totalMinutes = Math.round(netWorkedHours * 60);
+      const formattedTime = `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(totalMinutes % 60).padStart(2, "0")}`;
+  
       const record = {
         Date: formatDate(checkInTime),
         "Check In": formatTime(checkInTime),
         "Check Out": formatTime(checkOutTime),
-        "Hours Worked": hoursWorked.toFixed(2),
+        Time: formattedTime,  // New column with hh:mm format
+        "Hours Worked": netWorkedHours.toFixed(2),
+        Breaks: `${totalBreakMinutes} min`,
         Task: task.trim(),
       };
-
+  
       setWorkedHours([...workedHours, record]);
       setIsCheckedIn(false);
       setCheckInTime(null);
       setTask("");
-      setError(""); // Clear error after successful checkout
+      setBreaks([]);
+      setTotalBreakMinutes(0);
+      setError("");
     }
   };
+  
 
   const handleExport = async () => {
     if (workedHours.length === 0) {
@@ -83,7 +127,7 @@ export default function TimeTracker() {
       const response = await fetch(`${apiUrl}/add-job-entry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jobName, data: workedHours }), // Send job name
+        body: JSON.stringify({ jobName, data: workedHours }),
       });
 
       if (response.ok) {
@@ -110,19 +154,41 @@ export default function TimeTracker() {
           </p>
         )}
 
+        {isPaused && (
+          <p className="text-lg font-mono text-yellow-600 mt-2">
+            Break Time: {formatBreakTimer(breakTimer)}
+          </p>
+        )}
+
+        {breaks.length > 0 && (
+          <div className="mt-4 text-gray-700 text-sm text-left bg-gray-100 p-3 rounded-lg shadow">
+            <p className="font-bold text-center mb-2 text-gray-800">Breaks</p>
+            <ul className="list-none space-y-1">
+              {breaks.map((breakMin, index) => (
+                <li key={index} className="text-gray-600">
+                  <span className="font-semibold">Break {index + 1}:</span> {breakMin} min
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {!isCheckedIn && workedHours.length > 0 && (
           <div className="text-lg font-semibold text-gray-700 mt-4">
             <p>Last Check-in: {workedHours[workedHours.length - 1]["Check In"]}</p>
             <p>Last Check-out: {workedHours[workedHours.length - 1]["Check Out"]}</p>
             <p>Hours Worked: {workedHours[workedHours.length - 1]["Hours Worked"]}</p>
+            <p>Breaks: {workedHours[workedHours.length - 1]["Breaks"]}</p>
             <p>Task: {workedHours[workedHours.length - 1]["Task"]}</p>
           </div>
         )}
 
-        {/* Button Group */}
         <div className="flex justify-center gap-4 mt-6">
           <Button onClick={handleCheckIn} disabled={isCheckedIn} variant="success">
             Check In
+          </Button>
+          <Button onClick={handlePauseResume} disabled={!isCheckedIn} variant="warning">
+            {isPaused ? "Resume" : "Pause"}
           </Button>
           <Button onClick={handleCheckOut} disabled={!isCheckedIn} variant="danger">
             Check Out
@@ -131,8 +197,7 @@ export default function TimeTracker() {
             Export
           </Button>
         </div>
-
-        {/* Task Input */}
+        
         <div className="mt-6">
           <label className="block text-gray-700 text-sm font-medium mb-2">Task:</label>
           <input
@@ -140,7 +205,7 @@ export default function TimeTracker() {
             value={task}
             onChange={(e) => {
               setTask(e.target.value);
-              if (e.target.value.trim()) setError(""); // Clear error if user types a valid task
+              if (e.target.value.trim()) setError("");
             }}
             placeholder="Enter task description..."
             className="w-full px-4 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-blue-300 focus:outline-none"
@@ -151,3 +216,5 @@ export default function TimeTracker() {
     </div>
   );
 }
+
+
