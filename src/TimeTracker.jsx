@@ -87,7 +87,7 @@ export default function TimeTracker() {
       const hoursWorked = (checkOutTime - checkInTime) / (1000 * 60 * 60);
       const netWorkedHours = hoursWorked - totalBreakMinutes / 60;
   
-      // Convert to minutes and round
+
       const totalMinutes = Math.round(netWorkedHours * 60);
       const formattedTime = `${String(Math.floor(totalMinutes / 60)).padStart(2, "0")}:${String(totalMinutes % 60).padStart(2, "0")}`;
   
@@ -95,7 +95,7 @@ export default function TimeTracker() {
         Date: formatDate(checkInTime),
         "Check In": formatTime(checkInTime),
         "Check Out": formatTime(checkOutTime),
-        Time: formattedTime,  // New column with hh:mm format
+        Time: formattedTime,
         "Hours Worked": netWorkedHours.toFixed(2),
         Breaks: `${totalBreakMinutes} min`,
         Task: task.trim(),

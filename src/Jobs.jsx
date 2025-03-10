@@ -104,8 +104,6 @@ export default function Jobs() {
                 {btn.name}
               </button>
 
-
-              {/* Delete Button (Trash Icon) */}
               <button
                 onClick={() => confirmDeleteButton(btn.id)}
                 className="absolute top-2 right-2 bg-white text-red-600 p-1 rounded-full shadow-md hover:bg-gray-200 transition-all"
