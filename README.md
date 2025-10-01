@@ -73,3 +73,4 @@ A simple and intuitive web-based time tracking application to track working hour
      12.03.2025  09:00       17:30        8.50           8:30    30 min    Development
      ```
    - The **"Time"** column shows the worked hours in the `hh:mm` format.
+   - The **"Hours Worked"** column shows formatted time for easier wage calculation.
